@@ -47,7 +47,7 @@ TokenTypeResult determineTokenType(char c)
   case ' ':
   case '\t':
   case '\n':
-    return TokenTypeResult{false};
+    return TokenTypeResult{false, TokenType::Unknown};
   default:;
     std::string msg = std::format("Unexpected character in input: '{}'", c);
     throw std::invalid_argument(msg);
@@ -89,6 +89,7 @@ std::vector<Token> tokenize(std::string input)
     results.push_back(
         Token{
             .tokenType = tokenTypeResult.tokenType,
+            .integerValue = 0,
         }
     );
   }

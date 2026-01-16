@@ -118,7 +118,7 @@ public:
       break;
     }
 
-    return (TreeExecutionResult){
+    return {
         .result = result,
         .description = leftResult.description + rightResult.description,
     };
@@ -151,7 +151,7 @@ public:
   {
     if (faces < 1 || die < 1)
     {
-      return (TreeExecutionResult){
+      return {
           .result = 0,
           .description = std::format(
               "\nRolling {}d{}...\nYou rolled: {}\n", die, faces, 0
@@ -163,9 +163,9 @@ public:
     std::string description = std::format("\nRolling {}d{}...\n", die, faces);
 
     long sum = 0;
-    for (int i = 0; i < die; i++)
+    for (unsigned int i = 0; i < die; i++)
     {
-      long roll = Random::get(1, faces + 1);
+      long roll = Random::get(1, faces);
       description += std::format("You rolled: {}\n", roll);
       rolls.push_back(roll);
       sum += roll;
@@ -175,7 +175,7 @@ public:
     {
       sum = 0;
       std::sort(rolls.begin(), rolls.end());
-      for (int i = 0; i < low.value(); i++)
+      for (unsigned int i = 0; i < low.value(); i++)
       {
         sum += rolls.at(i);
       }
@@ -184,13 +184,13 @@ public:
     {
       sum = 0;
       std::sort(rolls.begin(), rolls.end(), std::greater<long>());
-      for (int i = 0; i < high.value(); i++)
+      for (unsigned int i = 0; i < high.value(); i++)
       {
         sum += rolls.at(i);
       }
     }
 
-    return (TreeExecutionResult){
+    return {
         .result = sum,
         .description = description,
     };
@@ -209,18 +209,18 @@ public:
   {
     if (faces < 1)
     {
-      return (TreeExecutionResult){
+      return {
           .result = 0,
           .description =
               std::format("\nRolling d{}...\nYou rolled: {}\n", faces, 0)
       };
     }
 
-    long result = Random::get(1, faces + 1);
+    long result = Random::get(1, faces);
     auto description =
         std::format("\nRolling d{}...\nYou rolled: {}\n", faces, result);
 
-    return (TreeExecutionResult){
+    return {
         .result = result,
         .description = description,
     };
@@ -237,7 +237,7 @@ public:
 
   TreeExecutionResult execute()
   {
-    return (TreeExecutionResult){
+    return {
         .result = static_cast<long>(integer),
         .description = "",
     };
@@ -297,7 +297,7 @@ std::unique_ptr<Tree> parse_longroll(std::unique_ptr<Iterator<Token>> &tokens)
     case TokenType::L:
       // discard L token
       tokens->next();
-      return std::make_unique<LongRollTreeNode>((LongRollTreeNodeArgs){
+      return std::make_unique<LongRollTreeNode>(LongRollTreeNodeArgs{
           .die = die,
           .faces = faces,
           .high = std::nullopt,
@@ -307,7 +307,7 @@ std::unique_ptr<Tree> parse_longroll(std::unique_ptr<Iterator<Token>> &tokens)
     case TokenType::H:
       // discard H token
       tokens->next();
-      return std::make_unique<LongRollTreeNode>((LongRollTreeNodeArgs){
+      return std::make_unique<LongRollTreeNode>(LongRollTreeNodeArgs{
           .die = die,
           .faces = faces,
           .high = parse_integer_raw(tokens),
@@ -320,7 +320,7 @@ std::unique_ptr<Tree> parse_longroll(std::unique_ptr<Iterator<Token>> &tokens)
     }
   }
 
-  return std::make_unique<LongRollTreeNode>((LongRollTreeNodeArgs){
+  return std::make_unique<LongRollTreeNode>(LongRollTreeNodeArgs{
       .die = die,
       .faces = faces,
       .high = std::nullopt,
@@ -388,7 +388,7 @@ std::unique_ptr<Tree> parse_mult(std::unique_ptr<Iterator<Token>> &tokens)
 
     auto rightOperand = parse_atom(tokens);
 
-    leftOperand = std::make_unique<MathTreeNode>((MathTreeNodeArgs){
+    leftOperand = std::make_unique<MathTreeNode>(MathTreeNodeArgs{
         .leftOperand = std::move(leftOperand),
         .rightOperand = std::move(rightOperand),
         .operation = op,
@@ -424,7 +424,7 @@ std::unique_ptr<Tree> parse_add(std::unique_ptr<Iterator<Token>> &tokens)
 
     auto rightOperand = parse_mult(tokens);
 
-    leftOperand = std::make_unique<MathTreeNode>((MathTreeNodeArgs){
+    leftOperand = std::make_unique<MathTreeNode>(MathTreeNodeArgs{
         .leftOperand = std::move(leftOperand),
         .rightOperand = std::move(rightOperand),
         .operation = op,

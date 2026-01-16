@@ -7,11 +7,10 @@
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "CMAKE_C_COMPILER": "/usr/bin/clang",
                 "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
                 "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_C_FLAGS_INIT": "-Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined",
-                "CMAKE_C_CLANG_TIDY": "clang-tidy",
+                "CMAKE_CXX_FLAGS_INIT": "-Wall -Wextra -Wpedantic -Werror -fsanitize=address,undefined",
+                "CMAKE_CXX_CLANG_TIDY": "clang-tidy",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             }
         }

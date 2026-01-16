@@ -5,6 +5,7 @@
 
 enum class TokenType
 {
+  Unknown,
   D,
   H,
   L,
