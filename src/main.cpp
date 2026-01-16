@@ -1,4 +1,6 @@
 #include "lexer.hpp"
+#include "parser.hpp"
+#include <format>
 #include <iostream>
 #include <string>
 
@@ -6,22 +8,22 @@ using namespace std;
 
 int main()
 {
-    string userInput;
+  string userInput;
 
-    cout << "Please enter a dice algebra expression: ";
+  cout << "Please enter a dice algebra expression: ";
 
-    getline(cin, userInput);
+  getline(cin, userInput);
 
-    cout << "You wrote: " << userInput << endl;
+  auto tokens = tokenize(userInput);
 
-    auto tokens = tokenize(userInput);
+  auto abstractSyntaxTree = parse(tokens);
 
-    for (auto token : tokens)
-    {
-        cout << "Got token: " << static_cast<int>(token.tokenType) << "\n";
-    }
+  auto result = abstractSyntaxTree->execute();
 
-    // TODO add exception handling here to print nicer error messages.
+  cout << result.description << format("\nYour result is: {}", result.result)
+       << endl;
 
-    return 0;
+  // TODO add exception handling here to print nicer error messages.
+
+  return 0;
 }

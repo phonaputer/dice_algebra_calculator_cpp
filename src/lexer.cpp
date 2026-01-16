@@ -73,15 +73,19 @@ std::vector<Token> tokenize(std::string input)
       continue;
     }
 
-    unsigned long integer = std::stoul(currentInt); // TODO handle exceptions
-    currentInt = "";
+    if (currentInt.size() > 0)
+    {
+      unsigned long integer = std::stoul(currentInt); // TODO handle exceptions
+      currentInt = "";
 
-    results.push_back(
-        Token{
-            .tokenType = TokenType::Integer,
-            .integerValue = integer,
-        }
-    );
+      results.push_back(
+          Token{
+              .tokenType = TokenType::Integer,
+              .integerValue = integer,
+          }
+      );
+    }
+
     results.push_back(
         Token{
             .tokenType = tokenTypeResult.tokenType,

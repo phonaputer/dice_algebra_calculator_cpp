@@ -1,5 +1,11 @@
 #include "parser.hpp"
+#include "random.hpp"
+#include <algorithm>
+#include <chrono>
+#include <format>
+#include <random>
 #include <stdexcept>
+#include <string>
 
 template <typename T> class Iterator
 {
@@ -8,7 +14,7 @@ private:
   unsigned int currentElement = 0;
 
 public:
-  Iterator(std::vector<T> v) : vec{v} {}
+  explicit Iterator(std::vector<T> v) : vec{v} {}
 
   std::optional<T> next()
   {
@@ -84,7 +90,38 @@ public:
 
   TreeExecutionResult execute()
   {
-    // FIXME
+    auto leftResult = leftOperand->execute();
+    auto rightResult = rightOperand->execute();
+
+    long result = 0;
+
+    switch (operation)
+    {
+    case MathOperation::Add:
+      result = leftResult.result + rightResult.result;
+      break;
+
+    case MathOperation::Subtract:
+      result = leftResult.result - rightResult.result;
+      break;
+
+    case MathOperation::Multiply:
+      result = leftResult.result * rightResult.result;
+      break;
+
+    case MathOperation::Divide:
+      if (rightResult.result == 0)
+      {
+        throw std::invalid_argument("Division by zero is not allowed.");
+      }
+      result = leftResult.result / rightResult.result;
+      break;
+    }
+
+    return (TreeExecutionResult){
+        .result = result,
+        .description = leftResult.description + rightResult.description,
+    };
   }
 };
 
@@ -112,7 +149,51 @@ public:
 
   TreeExecutionResult execute()
   {
-    // FIXME
+    if (faces < 1 || die < 1)
+    {
+      return (TreeExecutionResult){
+          .result = 0,
+          .description = std::format(
+              "\nRolling {}d{}...\nYou rolled: {}\n", die, faces, 0
+          ),
+      };
+    }
+
+    std::vector<long> rolls;
+    std::string description = std::format("\nRolling {}d{}...\n", die, faces);
+
+    long sum = 0;
+    for (int i = 0; i < die; i++)
+    {
+      long roll = Random::get(1, faces + 1);
+      description += std::format("You rolled: {}\n", roll);
+      rolls.push_back(roll);
+      sum += roll;
+    }
+
+    if (low.has_value() && low.value() < rolls.size())
+    {
+      sum = 0;
+      std::sort(rolls.begin(), rolls.end());
+      for (int i = 0; i < low.value(); i++)
+      {
+        sum += rolls.at(i);
+      }
+    }
+    else if (high.has_value() && high.value() < rolls.size())
+    {
+      sum = 0;
+      std::sort(rolls.begin(), rolls.end(), std::greater<long>());
+      for (int i = 0; i < high.value(); i++)
+      {
+        sum += rolls.at(i);
+      }
+    }
+
+    return (TreeExecutionResult){
+        .result = sum,
+        .description = description,
+    };
   }
 };
 
@@ -126,7 +207,23 @@ public:
 
   TreeExecutionResult execute()
   {
-    // FIXME
+    if (faces < 1)
+    {
+      return (TreeExecutionResult){
+          .result = 0,
+          .description =
+              std::format("\nRolling d{}...\nYou rolled: {}\n", faces, 0)
+      };
+    }
+
+    long result = Random::get(1, faces + 1);
+    auto description =
+        std::format("\nRolling d{}...\nYou rolled: {}\n", faces, result);
+
+    return (TreeExecutionResult){
+        .result = result,
+        .description = description,
+    };
   }
 };
 
@@ -140,13 +237,16 @@ public:
 
   TreeExecutionResult execute()
   {
-    // FIXME
+    return (TreeExecutionResult){
+        .result = static_cast<long>(integer),
+        .description = "",
+    };
   }
 };
 
-unsigned long parse_integer_raw(Iterator<Token> tokens)
+unsigned long parse_integer_raw(std::unique_ptr<Iterator<Token>> &tokens)
 {
-  auto nextResult = tokens.next();
+  auto nextResult = tokens->next();
 
   if (!nextResult.has_value() ||
       nextResult.value().tokenType != TokenType::Integer)
@@ -157,42 +257,46 @@ unsigned long parse_integer_raw(Iterator<Token> tokens)
   return nextResult.value().integerValue;
 }
 
-std::unique_ptr<Tree> parse_integer(Iterator<Token> tokens)
+std::unique_ptr<Tree> parse_integer(std::unique_ptr<Iterator<Token>> &tokens)
 {
   return std::make_unique<IntegerTreeNode>(parse_integer_raw(tokens));
 }
 
-std::unique_ptr<Tree> parse_shortroll(Iterator<Token> tokens)
+std::unique_ptr<Tree> parse_shortroll(std::unique_ptr<Iterator<Token>> &tokens)
 {
-  auto nextResult = tokens.next();
+  auto nextResult = tokens->next();
   if (!nextResult.has_value() || nextResult.value().tokenType != TokenType::D)
   {
-    throw std::invalid_argument("Unexpected end of input.");
+    throw std::logic_error(
+        "Parse shortroll should not be called when the next token is not D."
+    );
   }
 
   return std::make_unique<ShortRollTreeNode>(parse_integer_raw(tokens));
 }
 
-std::unique_ptr<Tree> parse_longroll(Iterator<Token> tokens)
+std::unique_ptr<Tree> parse_longroll(std::unique_ptr<Iterator<Token>> &tokens)
 {
   auto die = parse_integer_raw(tokens);
 
-  auto nextResult = tokens.next();
+  auto nextResult = tokens->next();
   if (!nextResult.has_value() || nextResult.value().tokenType != TokenType::D)
   {
-    throw std::invalid_argument("Unexpected end of input.");
+    throw std::logic_error(
+        "Parse longroll should not be called when the 2nd token is not D."
+    );
   }
 
   auto faces = parse_integer_raw(tokens);
 
-  nextResult = tokens.peek();
+  nextResult = tokens->peek();
   if (nextResult.has_value())
   {
     switch (nextResult.value().tokenType)
     {
     case TokenType::L:
       // discard L token
-      tokens.next();
+      tokens->next();
       return std::make_unique<LongRollTreeNode>((LongRollTreeNodeArgs){
           .die = die,
           .faces = faces,
@@ -202,13 +306,17 @@ std::unique_ptr<Tree> parse_longroll(Iterator<Token> tokens)
 
     case TokenType::H:
       // discard H token
-      tokens.next();
+      tokens->next();
       return std::make_unique<LongRollTreeNode>((LongRollTreeNodeArgs){
           .die = die,
           .faces = faces,
           .high = parse_integer_raw(tokens),
           .low = std::nullopt,
       });
+
+    default:
+        // do nothing and return at the bottom of this function
+        ;
     }
   }
 
@@ -220,15 +328,15 @@ std::unique_ptr<Tree> parse_longroll(Iterator<Token> tokens)
   });
 }
 
-std::unique_ptr<Tree> parse_roll(Iterator<Token> tokens)
+std::unique_ptr<Tree> parse_roll(std::unique_ptr<Iterator<Token>> &tokens)
 {
-  auto nextToken = tokens.peek();
+  auto nextToken = tokens->peek();
   if (nextToken.has_value() && nextToken.value().tokenType == TokenType::D)
   {
     return parse_shortroll(tokens);
   }
 
-  auto nextNextToken = tokens.peek();
+  auto nextNextToken = tokens->peekNext();
   if (nextNextToken.has_value() &&
       nextNextToken.value().tokenType == TokenType::D)
   {
@@ -238,29 +346,29 @@ std::unique_ptr<Tree> parse_roll(Iterator<Token> tokens)
   return parse_integer(tokens);
 }
 
-std::unique_ptr<Tree> parse_add(Iterator<Token> tokens);
+std::unique_ptr<Tree> parse_add(std::unique_ptr<Iterator<Token>> &tokens);
 
-std::unique_ptr<Tree> parse_atom(Iterator<Token> tokens)
+std::unique_ptr<Tree> parse_atom(std::unique_ptr<Iterator<Token>> &tokens)
 {
-  auto nextToken = tokens.peek();
+  auto nextToken = tokens->peek();
   if (nextToken.has_value() &&
       nextToken.value().tokenType != TokenType::OpenParenthesis)
   {
     return parse_roll(tokens);
   }
 
-  tokens.next(); // discard ( token
+  tokens->next(); // discard ( token
   auto result = parse_add(tokens);
-  tokens.next(); // discard ) token
+  tokens->next(); // discard ) token
 
   return result;
 }
 
-std::unique_ptr<Tree> parse_mult(Iterator<Token> tokens)
+std::unique_ptr<Tree> parse_mult(std::unique_ptr<Iterator<Token>> &tokens)
 {
   auto leftOperand = parse_atom(tokens);
 
-  auto peekResult = tokens.peek();
+  auto peekResult = tokens->peek();
   while (peekResult.has_value())
   {
     MathOperation op;
@@ -276,7 +384,7 @@ std::unique_ptr<Tree> parse_mult(Iterator<Token> tokens)
       return leftOperand;
     }
 
-    tokens.next(); // discard * or / token
+    tokens->next(); // discard * or / token
 
     auto rightOperand = parse_atom(tokens);
 
@@ -285,16 +393,18 @@ std::unique_ptr<Tree> parse_mult(Iterator<Token> tokens)
         .rightOperand = std::move(rightOperand),
         .operation = op,
     });
+
+    peekResult = tokens->peek();
   }
 
   return leftOperand;
 }
 
-std::unique_ptr<Tree> parse_add(Iterator<Token> tokens)
+std::unique_ptr<Tree> parse_add(std::unique_ptr<Iterator<Token>> &tokens)
 {
   auto leftOperand = parse_mult(tokens);
 
-  auto peekResult = tokens.peek();
+  auto peekResult = tokens->peek();
   while (peekResult.has_value())
   {
     MathOperation op;
@@ -310,7 +420,7 @@ std::unique_ptr<Tree> parse_add(Iterator<Token> tokens)
       return leftOperand;
     }
 
-    tokens.next(); // discard + or - token
+    tokens->next(); // discard + or - token
 
     auto rightOperand = parse_mult(tokens);
 
@@ -319,6 +429,8 @@ std::unique_ptr<Tree> parse_add(Iterator<Token> tokens)
         .rightOperand = std::move(rightOperand),
         .operation = op,
     });
+
+    peekResult = tokens->peek();
   }
 
   return leftOperand;
@@ -353,7 +465,7 @@ std::unique_ptr<Tree> parse(std::vector<Token> tokens)
 {
   validate_parenthesis_count(tokens);
 
-  auto iterator = Iterator<Token>(tokens);
+  auto iterator = std::make_unique<Iterator<Token>>(tokens);
 
-  return parse_add(tokens);
+  return parse_add(iterator);
 }
