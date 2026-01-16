@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(SOURCES
     src/main.cpp
     src/lexer.cpp
+    src/parser.cpp
 )
 
 add_executable(dice_algebra_calculator ${SOURCES})
