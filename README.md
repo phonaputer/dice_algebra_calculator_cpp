@@ -106,6 +106,17 @@ cmake --preset debug-clang
 
 These two commands create the directories `out/build/debug-gcc` and `out/build/debug-clang`, respectively, containing the generated build systems.
 
+# How to run unit tests
+
+The unit tests can be run from the CMake build system output directory by running `ctest`.
+For example...
+
+```
+ctest --output-on-failure
+```
+
+Please note that both the application source & test source must be compiled first.
+
 ## Retrospective Thoughts
 
 Given how people sometimes talk about C++, I was a bit surprised at how easy writing this program actually was. 
