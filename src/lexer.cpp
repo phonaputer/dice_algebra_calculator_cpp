@@ -1,6 +1,6 @@
 #include "lexer.hpp"
+#include "dice_exception.hpp"
 #include <format>
-#include <stdexcept>
 
 struct TokenTypeResult
 {
@@ -47,10 +47,11 @@ TokenTypeResult determineTokenType(char c)
   case ' ':
   case '\t':
   case '\n':
+    // Whitespace in an expression is valid, but not a token.
     return TokenTypeResult{false, TokenType::Unknown};
   default:;
     std::string msg = std::format("Unexpected character in input: '{}'", c);
-    throw std::invalid_argument(msg);
+    throw DiceException(msg);
   }
 }
 

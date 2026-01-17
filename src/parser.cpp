@@ -1,10 +1,10 @@
 #include "parser.hpp"
+#include "dice_exception.hpp"
 #include "random.hpp"
 #include <algorithm>
 #include <chrono>
 #include <format>
 #include <random>
-#include <stdexcept>
 #include <string>
 
 template <typename T> class Iterator
@@ -112,7 +112,7 @@ public:
     case MathOperation::Divide:
       if (rightResult.result == 0)
       {
-        throw std::invalid_argument("Division by zero is not allowed.");
+        throw DiceException("Division by zero is not allowed.");
       }
       result = leftResult.result / rightResult.result;
       break;
@@ -251,7 +251,7 @@ unsigned long parse_integer_raw(std::unique_ptr<Iterator<Token>> &tokens)
   if (!nextResult.has_value() ||
       nextResult.value().tokenType != TokenType::Integer)
   {
-    throw std::invalid_argument("Input expression is not valid.");
+    throw DiceException("Input expression is not valid.");
   }
 
   return nextResult.value().integerValue;
@@ -455,9 +455,7 @@ void validate_parenthesis_count(std::vector<Token> tokens)
 
   if (openCount != closeCount)
   {
-    throw std::invalid_argument(
-        "Expression contains an unclosed parenthetical."
-    );
+    throw DiceException("Expression contains an unclosed parenthetical.");
   }
 }
 
