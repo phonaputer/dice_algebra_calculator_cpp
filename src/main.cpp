@@ -6,15 +6,12 @@
 #include <stdexcept>
 #include <string>
 
-using namespace std;
-
-int main()
+int main(int argc, char *argv[])
 {
-  string userInput;
+  std::cout << "Please enter a dice algebra expression: ";
 
-  cout << "Please enter a dice algebra expression: ";
-
-  getline(cin, userInput);
+  std::string userInput;
+  std::getline(std::cin, userInput);
 
   try
   {
@@ -22,22 +19,28 @@ int main()
     auto abstractSyntaxTree = parse(tokens);
     auto result = abstractSyntaxTree->execute();
 
-    cout << result.description << format("\nYour result is: {}", result.result)
-         << endl;
+    bool verbose = argc > 1 && std::string(argv[1]) == "--v";
+    if (verbose)
+    {
+      std::cout << result.description;
+    }
+
+    std::cout << std::format("\nYour result is: {}", result.result)
+              << std::endl;
   }
   catch (DiceException &e)
   {
-    cout << "Error: " << e.what() << endl;
+    std::cout << "Error: " << e.what() << std::endl;
     return 1;
   }
   catch (std::exception &e)
   {
-    cout << "An unexpected error has occurred!\n" << e.what() << endl;
+    std::cout << "An unexpected error has occurred!\n" << e.what() << std::endl;
     return 2;
   }
   catch (...)
   {
-    cout << "An unexpected error has occurred!" << endl;
+    std::cout << "An unexpected error has occurred!" << std::endl;
     return 2;
   }
 
