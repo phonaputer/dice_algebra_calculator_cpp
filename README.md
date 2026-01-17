@@ -106,4 +106,27 @@ cmake --preset debug-clang
 
 These two commands create the directories `out/build/debug-gcc` and `out/build/debug-clang`, respectively, containing the generated build systems.
 
-## Retrospective
+## Retrospective Thoughts
+
+Given how people sometimes talk about C++, I was a bit surprised at how easy writing this program actually was. 
+Writing it in C++ did not feel significantly more difficult than writing it in Java or Go would have been.
+
+Having just written this same program in C, I was struck by how easy it is to handle memory management with smart pointers.
+When writing the C version of this program I was constantly getting memory errors/warnings from the compiler, `clang-tidy`, `valgrind`, etc. due to mistakes in my code.
+In contrast, I don't think I encountered a single memory related error when writing the C++ version.
+I'm sure in a bigger program or a concurrent program this would be more of a problem, but the standard library types provided by C++ really do seem quite excellent.
+
+It's also worth noting that writing the C version of this program took me over 20 hours - whereas C++ took me 4-5 hours in total (I haven't used either language since university 10+ years ago).
+I would credit most of this to the C++ standard library & presence of OOP features.
+One thing I will say in C's favor is that it does compile quite a bit faster. 
+The C program ended up being 1456 lines and this one is 716.
+
+The only negative I saw is that, unlike Java, C++ doesn't print a stack trace with errors/exceptions. 
+For an app of this size, this was not a problem (I could just jump into the debugger to find the source). 
+But for a production system such as a web API, if I began to see "Segmentation fault" logs appear I'd also want to see the line of code they're coming from.
+This reminds me a bit of hunting down the source of an error in a poorly written Go application. 
+I'm guessing there must be a good solution to this problem though, since I can't be the only one who has this complaint.
+
+In conclusion, C++ was much more pleasant to write than I expected (especially after C) and I'd definitely consider C++ usable for a work project. 
+However, I'm not sure if I would do so on a team with mainly beginner-level engineers since the language does give you the option to shoot yourself in the foot with memory management even if the smart pointers make it harder to do that. 
+
