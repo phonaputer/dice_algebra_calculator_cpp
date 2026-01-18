@@ -281,6 +281,10 @@ std::unique_ptr<Tree> parse_longroll(std::unique_ptr<Iterator<Token>> &tokens)
 std::unique_ptr<Tree> parse_roll(std::unique_ptr<Iterator<Token>> &tokens)
 {
   auto nextToken = tokens->peek();
+  if (!nextToken.has_value())
+  {
+    throw DiceException("Input expression is not valid.");
+  }
   if (nextToken.has_value() && nextToken.value().tokenType == TokenType::D)
   {
     return parse_shortroll(tokens);
@@ -301,6 +305,10 @@ std::unique_ptr<Tree> parse_add(std::unique_ptr<Iterator<Token>> &tokens);
 std::unique_ptr<Tree> parse_atom(std::unique_ptr<Iterator<Token>> &tokens)
 {
   auto nextToken = tokens->peek();
+  if (!nextToken.has_value())
+  {
+    throw DiceException("Input expression is not valid.");
+  }
   if (nextToken.has_value() &&
       nextToken.value().tokenType != TokenType::OpenParenthesis)
   {
@@ -409,8 +417,17 @@ void validate_parenthesis_count(std::vector<Token> tokens)
   }
 }
 
+void validate_input_not_empty(std::vector<Token> tokens)
+{
+  if (tokens.size() < 1)
+  {
+    throw DiceException("Empty input.");
+  }
+}
+
 std::unique_ptr<Tree> parse(std::vector<Token> tokens)
 {
+  validate_input_not_empty(tokens);
   validate_parenthesis_count(tokens);
 
   auto iterator = std::make_unique<Iterator<Token>>(tokens);

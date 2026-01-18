@@ -106,16 +106,15 @@ cmake --preset debug-clang
 
 These two commands create the directories `out/build/debug-gcc` and `out/build/debug-clang`, respectively, containing the generated build systems.
 
-# How to run unit tests
+## How to Run the Unit Tests Locally
 
-The unit tests can be run from the CMake build system output directory by running `ctest`.
-For example...
+The unit tests can be run from the CMake build system output directory by compiling them and then running `ctest`.
+For example, using a `make` build system...
 
 ```
+make unit_tests
 ctest --output-on-failure
 ```
-
-Please note that both the application source & test source must be compiled first.
 
 ## Retrospective Thoughts
 
@@ -127,7 +126,7 @@ When writing the C version of this program I was constantly getting memory error
 In contrast, I don't think I encountered a single memory related error when writing the C++ version.
 I'm sure in a bigger program or a concurrent program this would be more of a problem, but the standard library types provided by C++ really do seem quite excellent.
 
-It's also worth noting that writing the C version of this program took me over 20 hours - whereas C++ took me 4-5 hours in total (I haven't used either language since university 10+ years ago).
+It's also worth noting that writing the C version of this program took me over 20 hours - whereas C++ took me 4-5 hours in total excluding unit tests (I haven't used either language since university 10+ years ago).
 I would credit most of this to the C++ standard library & presence of OOP features.
 One thing I will say in C's favor is that it does compile quite a bit faster. 
 The C program ended up being 1456 lines and this one is 716.
